@@ -7,7 +7,8 @@ np.set_printoptions(suppress=True)
 
 # Load the model
 # model = load_model("models/keras_model.h5", compile=False)
-model = load_model("models/model_0.750.h5", compile=False)
+# model = load_model("models/model_last.h5", compile=False)
+model = load_model("models/model_last.keras", compile=False)
 
 # Load the labels
 class_names = open("labels.txt", "r").readlines()

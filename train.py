@@ -25,16 +25,17 @@ BATCH_SIZE = 32
 CLASS_MODE = 'binary' # for two classes
 # CLASS_MODE = 'categorical' # for over 2 classes
 
-train_dir = os.path.join('./data', 'train')
-test_dir = os.path.join('./data', 'test')
+train_dir = os.path.join('./data/training', 'train')
+val_dir = os.path.join('./data/training', 'val')
+test_dir = os.path.join('./data/training', 'test')
 
-# Directory with train taylor images
-train_taylor_dir = os.path.join(train_dir, 'taylor')
-train_celedion_dir = os.path.join(train_dir, 'celedion')
-# Directory with test taylor image
-test_taylor_dir = os.path.join(test_dir, 'taylor')
-# Directory with test celedion image
-test_celedion_dir = os.path.join(test_dir, 'celedion')
+# # Directory with train taylor images
+# train_taylor_dir = os.path.join(train_dir, 'taylor')
+# train_celedion_dir = os.path.join(train_dir, 'celedion')
+# # Directory with test taylor image
+# test_taylor_dir = os.path.join(test_dir, 'taylor')
+# # Directory with test celedion image
+# test_celedion_dir = os.path.join(test_dir, 'celedion')
 
 # Connecting the ImageDataGenerator objects to dataset
 train_generator = dgen_train.flow_from_directory(
@@ -45,7 +46,7 @@ train_generator = dgen_train.flow_from_directory(
     class_mode=CLASS_MODE
 )
 validation_generator = dgen_train.flow_from_directory(
-    train_dir,
+    val_dir,
     target_size=TARGET_SIZE,
     subset='validation',
     batch_size=BATCH_SIZE,
@@ -59,7 +60,7 @@ test_generator = dgen_test.flow_from_directory(
 )
 
 # Get the class indices
-print(train_generator.class_indices)
+print('class_indices => ', train_generator.class_indices)
 
 # Building CNN Model (image input sizse = 200 x 200)
 model = Sequential()
@@ -83,35 +84,45 @@ model.compile(Adam(lr=0.001), loss='binary_crossentropy', metrics=['accuracy'])
 # model.compile(Adam(lr=0.001), loss='categorical_crossentropy', metrics=['accuracy'])
 
 # Train the Model
-history = model.fit(
-    train_generator,
-    epochs=30,
-    # validation_data=validation_generator,
-    validation_data=test_generator,
-    callbacks=[
-        # Stopping our training if val_accuracy doesn't improve after 20 epochs
-        # tensorflow.keras.callbacks.EarlyStopping(monitor='accuracy', patience=20), # accuracy, loss
-        tensorflow.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=20), # accuracy, loss
-        # Saving the best weights of our model in the model directory
+# history = model.fit(
+#     train_generator,
+#     epochs=30,
+#     # validation_data=validation_generator,
+#     validation_data=test_generator,
+#     callbacks=[
+#         # Stopping our training if val_accuracy doesn't improve after 20 epochs
+#         # tensorflow.keras.callbacks.EarlyStopping(monitor='accuracy', patience=20), # accuracy, loss
+#         tensorflow.keras.callbacks.EarlyStopping(monitor='val_accuracy', patience=20), # accuracy, loss
+#         # Saving the best weights of our model in the model directory
 
-        # We don't want to save just the weight, but also the model architecture
-        tensorflow.keras.callbacks.ModelCheckpoint(
-            # 'models/model_{accuracy:.3f}.h5', # accuracy, loss
-            'models/model_{val_accuracy:.3f}.h5', # accuracy, loss
-            save_best_only=True,
-            save_weights_only=False,
-            # monitor='accuracy' # accuracy, loss
-            monitor='val_accuracy' # accuracy, loss
-        )
-    ]
-)
+#         # We don't want to save just the weight, but also the model architecture
+#         tensorflow.keras.callbacks.ModelCheckpoint(
+#             # 'models/model_{accuracy:.3f}.h5', # accuracy, loss
+#             'models/model_{val_accuracy:.3f}.h5', # accuracy, loss
+#             save_best_only=True,
+#             save_weights_only=False,
+#             # monitor='accuracy' # accuracy, loss
+#             monitor='val_accuracy' # accuracy, loss
+#         )
+#     ]
+# )
+
+#############################################################
+model.fit(train_generator, validation_data=test_generator, epochs=30, batch_size=2, verbose=0, use_multiprocessing=False)
+# evaluate the model
+scores = model.evaluate(train_generator, verbose=0)
+print("%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
+# model.save("models/model_last.h5")
+model.save("models/model_last.keras")
+print("Saved model to disk")
+#############################################################
 
 # Performance Evaluation
-print(history.history.keys())
+# print(history.history.keys())
 
 # Plot graph between training and validation loss
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_accuracy'])
-plt.legend(['Training', 'Validation'])
-plt.title('Training and Validation Losses')
-plt.xlabel('epoch')
+# plt.plot(history.history['loss'])
+# plt.plot(history.history['val_accuracy'])
+# plt.legend(['Training', 'Validation'])
+# plt.title('Training and Validation Losses')
+# plt.xlabel('epoch')
